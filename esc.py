@@ -1,13 +1,14 @@
 # This program controls a ESC. This program is designed specifically for the BlueRobotics T200
 # Make sure your battery is not connected if you are going to calibrate it at first.
+# If you get a message that says 'Can't initialise pigpio library', the pigpio daemon likely needs to be restarted. Run "sudo killall pigpiod" then rerun the program.
 
 import os     #importing os library so as to communicate with the system
-import time   #importing time library to make Rpi wait because its too impatient 
-os.system ("sudo pigpiod") #Launching GPIO library
-time.sleep(1) # Delay to let the GPIO library initialize
-import pigpio #importing GPIO library
+import time 
+os.system ("sudo pigpiod") # Start the pigpio daemon
+time.sleep(1) # Delay to let the pigpio library initialize
+import pigpio #importing pigpio library
 
-ESC=4  #Connect the ESC in this GPIO pin 
+ESC=4  #Connect the ESC to this GPIO pin 
 
 pi = pigpio.pi()
 pi.set_servo_pulsewidth(ESC, 0) 
@@ -17,8 +18,6 @@ neutral_value = 1500      #ESC neutral_value
 min_value = 1100          #ESC min value - max backwards thrust
 
 print("Please Calibrate the ESC before arming")
-print("Type the exact word for the function you want")
-print("calibrate OR manual OR control OR arm OR stop")
 
 def config():
     print("Config Menu")
@@ -39,9 +38,18 @@ def config():
             break
         elif inp == "stop":
             stop()
-            break'
-        else 
+            break
+        else:
             print("Invalid input")
+           
+# Limits the speed if the input speedis greater than the max value, or less than the min value 
+def check_speed(speed):
+    if speed > max_value:
+        return max_value
+    elif speed < min_value:
+        return min_value
+    else:
+        return speed
 
 # Provides manual control over ESC inputs
 def manual_drive(): 
@@ -59,7 +67,7 @@ def manual_drive():
             
 # This is the auto calibration procedure of ESC    
 def calibrate():   
-    pi.set_servo_pulsewidth(ESC, 0)For first time launch, select calibrate
+    pi.set_servo_pulsewidth(ESC, 0)
     print("Disconnect the battery and press Enter")
     inp = input()
     if inp == '':
@@ -74,13 +82,15 @@ def calibrate():
             time.sleep(2)
             print("ESC is calibrated")
             config()
-            
+   
+# Allows incrementing and decrementing esc speed with arrow keys         
 def control(): 
     print("Starting Motor... ensure that the motos has already been calibrated and armed")
     time.sleep(1)
     speed = neutral_value
     print("Controls - a to decrease speed & d to increase speed OR q to decrease a lot of speed & e to increase a lot of speed")
     while True:
+        speed = check_speed(speed);
         pi.set_servo_pulsewidth(ESC, speed)
         inp = input()
         
@@ -119,9 +129,12 @@ def arm():
         print("ESC is armed")
         config()
         
-def stop(): #This will stop every action your Pi is performing for ESC ofcourse.
+def stop(): #Stops all pigpio actions
+
     pi.set_servo_pulsewidth(ESC, 0)
     pi.stop()
+    os.system ("sudo killall pigppiod") # Kill the pigpio daemon
+    
 
 #Start of the program
 config()
