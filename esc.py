@@ -7,7 +7,7 @@ import time
 os.system ("sudo pigpiod") # Start the pigpio daemon
 time.sleep(1) # Delay to let the pigpio library initialize
 import pigpio #importing pigpio library
-import keyboard
+import readchar
 
 ESC=4  #Connect the ESC to this GPIO pin 
 
@@ -19,6 +19,22 @@ neutral_value = 1500      #ESC neutral_value
 min_value = 1100          #ESC min value - max backwards thrust
 
 print("Please Calibrate the ESC before arming")
+
+def get_arrow_key():
+    while True:
+        key = readchar.readkey()
+        if key == '\x1b[A': 
+            return "UP"
+        if key == '\x1b[B': 
+            return "DOWN"
+        elif key == 'c':
+            return "c"
+        elif key == 's':
+            return "s"
+        else:
+            return "INVALID"
+                
+                
 
 def config():
     print("Config Menu")
@@ -93,22 +109,24 @@ def control():
     while True:
         speed = check_speed(speed);
         pi.set_servo_pulsewidth(ESC, speed)
-        event = keyboard.read_event()
+        time.sleep(0.1)
+        key = get_arrow_key()
         
-        if event.name == "down":
+        if key == "DOWN":
             speed -= 10    # decrementing the speed by 10
             print("speed = %d" % speed)
-        elif event.name == "up":    
+        elif key == "UP":    
             speed += 10    # incrementing the speed by 10
             print("speed = %d" % speed)
-        elif event.name == "s":
+        elif key == "s":
             stop()          #going for the stop function
             break
-        elif event.name == "c":
+        elif key == "c":
             config()
             break	
         else:
             print("Invalid Input")
+           
             
 # This is the arming procedure of an ESC       
 def arm(): 
