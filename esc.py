@@ -20,45 +20,31 @@ min_value = 1100          #ESC min value - max backwards thrust
 
 print("Please Calibrate the ESC before arming")
 
-def get_arrow_key():
+# --------------------------------------------------------------------------------------------------------
+# Helper Functions
+# --------------------------------------------------------------------------------------------------------------
+
+# Processes user input - returns a string
+def get_key():
     while True:
         key = readchar.readkey()
         if key == '\x1b[A': 
             return "UP"
-        if key == '\x1b[B': 
+        elif key == '\x1b[B': 
             return "DOWN"
-        elif key == 'c':
-            return "c"
+        elif key == '\x1b[C': 
+            return "RIGHT"
+        elif key == '\x1b[D': 
+            return "LEFT"
+        elif key == 'm':
+            return "m"
         elif key == 's':
             return "s"
+        elif key == 'r':
+            return "r"
         else:
             return "INVALID"
-                
-                
-
-def config():
-    print("Config Menu")
-    print("Type 'calibrate' OR 'arm' OR 'manual' OR 'control' OR 'stop'")  
-    while True:
-        inp = input()
-        if inp == "calibrate":
-            calibrate()
-            break
-        elif inp == "arm":
-            arm()
-            break
-        elif inp == "manual":
-            manual()
-            break
-        elif inp == "control":
-            control()
-            break
-        elif inp == "stop":
-            stop()
-            break
-        else:
-            print("Invalid input")
-           
+        
 # Limits the speed if the input speedis greater than the max value, or less than the min value 
 def check_speed(speed):
     if speed > max_value:
@@ -66,7 +52,13 @@ def check_speed(speed):
     elif speed < min_value:
         return min_value
     else:
-        return speed
+        return speed        
+                
+# -------------------------------------------------------------------------------------------------------------------------
+# Mode functions
+# -------------------------------------------------------------------------------------------------------------------------
+           
+
 
 # Provides manual control over ESC inputs
 def manual_drive(): 
@@ -148,6 +140,31 @@ def stop(): #Stops all pigpio actions
     pi.stop()
     os.system ("sudo killall pigppiod") # Kill the pigpio daemon
     
+# ----------------------------------------------------------------------------------------------------------------------
+# Main Menu
+# --------------------------------------------------------------------------------------------------------------------------
+def menu():
+    print("Config Menu")
+    print("Type 'calibrate' OR 'arm' OR 'manual' OR 'control' OR 'stop'")  
+    while True:
+        inp = input()
+        if inp == "calibrate":
+            calibrate()
+            break
+        elif inp == "arm":
+            arm()
+            break
+        elif inp == "manual":
+            manual()
+            break
+        elif inp == "control":
+            control()
+            break
+        elif inp == "stop":
+            stop()
+            break
+        else:
+            print("Invalid input")
 
 #Start of the program
-config()
+menu()
