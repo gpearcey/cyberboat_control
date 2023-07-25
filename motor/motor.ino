@@ -107,6 +107,7 @@ PWR+             VIN
 #include <stdint.h>
 #include <stdarg.h>
 #include <HardwareSerial.h>
+#include <Servo.h>
 
 #include <avr/wdt.h>
 #include <avr/sleep.h>
@@ -187,6 +188,9 @@ uint8_t pwm_style = 2; // detected to 0 or 1 unless detection disabled, default 
 #define hbridge_b_top_pin 10
 #define enable_pin 10 // for vnh2sp30
 
+#define manual_control_pin 8
+#define servo_position_pin A3
+
 // for direct mosfet mode, define how to turn on/off mosfets
 // do not use digitalWrite!
 #define a_top_on  PORTB |= _BV(PB1)
@@ -213,7 +217,10 @@ uint8_t voltage_sense = 1;
 uint8_t voltage_mode = 0;  // 0 = 12 volts, 1 = 24 volts
 uint16_t max_voltage = 1600; // 16 volts max in 12 volt mode
 
+int servo_val;
+
 #define led_pin 13 // led is on when engaged
+
 
 void debug(const char *fmt, ... ){
     char buf[128]; // resulting string limited to 128 chars
@@ -376,9 +383,12 @@ void setup()
     pinMode(shunt_sense_pin, INPUT_PULLUP);
     pinMode(low_current_pin, INPUT_PULLUP);
     pinMode(pwm_style_pin, INPUT_PULLUP);
+    pinMode(manual_control_pin, INPUT_PULLUP);
+    pinMode(manual_control_pin, INPUT_PULLUP);
     pinMode(clutch_pin, INPUT_PULLUP);
     pinMode(voltage_sense_pin, INPUT_PULLUP);
     pinMode(clutch_sense_pwm_pin, INPUT_PULLUP);
+    pinMode(servo_position_pin, INPUT_PULLUP);
 
     serialin = 0;
     // set up Serial library
@@ -405,6 +415,9 @@ void setup()
 
     pinMode(pwm_style_pin, INPUT);
     digitalWrite(pwm_style_pin, HIGH); /* enable internal pullups */
+
+    pinMode(manual_control_pin, INPUT);
+    digitalWrite(manual_control_pin, HIGH); /* enable internal pullups */
 
     pinMode(shunt_sense_pin, INPUT);
     digitalWrite(shunt_sense_pin, HIGH); /* enable internal pullups */
@@ -1192,11 +1205,17 @@ ISR(PCINT2_vect) {
 }
 
 void loop()
-{
-    //digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    //delay(500);                       // wait for a second
-    //digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    //delay(500); 
+{ 
+    // Check if in manual mode
+    if (digitalRead(manual_control_pin))
+    {
+        servo_val = 1500;
+        digitalWrite(pwm_output_pin, HIGH);
+        delayMicroseconds(servo_val);
+        digitalWrite(pwm_output_pin, LOW);
+        delayMicroseconds(20000 - servo_val);
+    }
+    else{ // Autopilot mode
     TIMSK0 = 0; // disable timer0 interrupt: millis is not used!
     wdt_reset(); // strobe watchdog
     service_adc();
@@ -1490,5 +1509,6 @@ void loop()
         Serial.write(crc8(crcbytes, 3));
         out_sync_b = 0;
         break;
+    }
     }
 }
