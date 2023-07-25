@@ -4,15 +4,15 @@
 
 import os     #importing os library so as to communicate with the system
 import time 
-#os.system ("sudo pigpiod") # Start the pigpio daemon
+os.system ("sudo pigpiod") # Start the pigpio daemon
 time.sleep(1) # Delay to let the pigpio library initialize
-#import pigpio #importing pigpio library
+import pigpio #importing pigpio library
 import readchar
 
 ESC=4  #Connect the ESC to this GPIO pin 
 
-#pi = pigpio.pi()
-#pi.set_servo_pulsewidth(ESC, 0) 
+pi = pigpio.pi()
+pi.set_servo_pulsewidth(ESC, 0) 
 
 max_value = 1900          #ESC max value - max forwards thrust
 neutral_value = 1500      #ESC neutral_value 
@@ -96,14 +96,14 @@ def manual_control_esc():
         elif inp == "m":
             main()
             break	
-        #elif inp == "n":
-            #pi.set_servo_pulsewidth(ESC,neutral_value)
-        #else:
-            #pi.set_servo_pulsewidth(ESC,inp)
+        elif inp == "n":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
+        else:
+            pi.set_servo_pulsewidth(ESC,inp)
             
 # This is the auto calibration procedure of ESC    
 def calibrate_esc():   
-    #pi.set_servo_pulsewidth(ESC, 0)
+    pi.set_servo_pulsewidth(ESC, 0)
     print("Disconnect the battery and press Enter")
     inp = input()
     if inp == '':
@@ -132,7 +132,7 @@ def control():
     print("Select 'q' to quit") 
     while True:
         speed = check_speed(speed)
-        #pi.set_servo_pulsewidth(ESC, speed)
+        pi.set_servo_pulsewidth(ESC, speed)
         time.sleep(0.1)
         key = get_key()
         
@@ -160,20 +160,20 @@ def arm_esc():
     print("Connect the battery and press Enter")
     inp = input()    
     if inp == '':
-        #pi.set_servo_pulsewidth(ESC, 0)
+        pi.set_servo_pulsewidth(ESC, 0)
         time.sleep(1)
-        #pi.set_servo_pulsewidth(ESC, max_value)
+        pi.set_servo_pulsewidth(ESC, max_value)
         time.sleep(1)
-        #pi.set_servo_pulsewidth(ESC, min_value)
+        pi.set_servo_pulsewidth(ESC, min_value)
         time.sleep(1)
         print("ESC is armed")
         main()
         
-#def exit(): #Stops all pigpio actions
+def exit(): #Stops all pigpio actions
 
-    #pi.set_servo_pulsewidth(ESC, 0)
-    #pi.stop()
-    #os.system ("sudo killall pigppiod") # Kill the pigpio daemon
+    pi.set_servo_pulsewidth(ESC, 0)
+    pi.stop()
+    os.system ("sudo killall pigppiod") # Kill the pigpio daemon
 
 #def set_rudder_mode():
 
