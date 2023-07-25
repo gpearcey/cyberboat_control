@@ -7,6 +7,7 @@ import time
 os.system ("sudo pigpiod") # Start the pigpio daemon
 time.sleep(1) # Delay to let the pigpio library initialize
 import pigpio #importing pigpio library
+import keyboard
 
 ESC=4  #Connect the ESC to this GPIO pin 
 
@@ -88,28 +89,22 @@ def control():
     print("Starting Motor... ensure that the motos has already been calibrated and armed")
     time.sleep(1)
     speed = neutral_value
-    print("Controls - a to decrease speed & d to increase speed OR q to decrease a lot of speed & e to increase a lot of speed")
+    print("Controls - up arrow to increase, down arrow to increase, c to go to config menu, s to stop")
     while True:
         speed = check_speed(speed);
         pi.set_servo_pulsewidth(ESC, speed)
-        inp = input()
+        event = keyboard.read_event()
         
-        if inp == "q":
-            speed -= 100    # decrementing the speed by 100
+        if event.name == "down":
+            speed -= 10    # decrementing the speed by 10
             print("speed = %d" % speed)
-        elif inp == "e":    
-            speed += 100    # incrementing the speed by 100
+        elif event.name == "up":    
+            speed += 10    # incrementing the speed by 10
             print("speed = %d" % speed)
-        elif inp == "d":
-            speed += 10     # incrementing the speed by 10
-            print("speed = %d" % speed)
-        elif inp == "a":
-            speed -= 10     # decrementing the speed by 10
-            print("speed = %d" % speed)
-        elif inp == "stop":
+        elif event.name == "s":
             stop()          #going for the stop function
             break
-        elif inp == "config":
+        elif event.name == "c":
             config()
             break	
         else:
