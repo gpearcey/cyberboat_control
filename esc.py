@@ -108,7 +108,7 @@ def calibrate_esc():
     inp = input()
     if inp == '':
         pi.set_servo_pulsewidth(ESC, max_value)
-        print("Connect the battery now.. you will here two beeps, then wait for a gradual falling tone then press Enter")
+        print("Connect the battery, wait for the beeps, and press Enter")
         inp = input()
         if inp == '':            
             pi.set_servo_pulsewidth(ESC, min_value)
@@ -202,6 +202,7 @@ def main():
         elif choice == 'q':
             print("Exiting the program.")
             exit()
+            break
         else:
             print("Invalid Input")
 
