@@ -13,13 +13,18 @@
 // Register value should be number of clock cycles before reset - 1 b/c we count up from 0
 int OCR1B_min = 1999; //+1=2000 clock cycles to get 1 ms pulse width (off)
 int OCR1B_max = 3999; // to get 2 ms pulse width (max speed)
-
+int max_position = 180;
 void setup() {
+  
+  //Serial setup
+  Serial.begin(9600);
+  pinMode(A0, INPUT_PULLUP);
   // Set timer output pin data direction
   // From ATMEGA328/P datasheet pgs 13 and 14 and the UNO schematic
   // OC1B -> PB2 -> MCU Pin 16 -> Board Pin 10
   // pg 167: Actual OC1x value will only be visible if data direction for the port pin is set as output (DDR_OC1x)
-  pinMode(10, OUTPUT);
+  //pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
 
   // Create variables to store the values to be written to the TIM1 registers
   // Control registers are 8 bits (char)
@@ -47,85 +52,61 @@ void setup() {
 
   // Write output compare registers (2 bytes)
   // pg 167: f_OCnxPWM = f_CLK_IO / (N*(1+TOP))
-  OCR1A = 39999; // To get 50 Hz frequency
-  OCR1B = OCR1B_min; // start at 1 ms pulse width
+  OCR1A = OCR1B_min; // To get 50 Hz frequency
+  OCR1B = 3999; // start at 1 ms pulse width
 
 }
-int potVal = 0;
-int inc = 1;
+int position = -1;
+void set_straight()
+{
+  position = 0;
+  while(position <= 180)
+  {
+    position = position + 1;
+    OCR1A = map(position, 0, max_position, OCR1B_min, OCR1B_max);
+    delay(20);
+  }
+
+  while(position > 90) 
+  {
+    position = position - 1;
+    OCR = map(position, 0, max_position, OCR1B_min, OCR1B_max);
+    delay(20);
+  }
+
+}
+int step = 2;
+String data;
+
+int new_position;
 void loop() {
   // Read analog input
+  set_straight();
   // Voltages are between 0-5V on an UNO per https://www.arduino.cc/reference/en/language/functions/analog-io/analogread/
-  potVal = potVal+inc;//analogRead(A0);
-  if (potVal > 1023){
-      inc = -1;
-  }
-  if (potVal < 0){
-    inc = 1;
+  if (position == -1)
+  {
+    set_straight();
   }
 
-
-
-  // Map the input to the timer output
-  // analogRead() values go from 0 to 1023.  We want to change the register from min to max specified above
-  // pg 166: OCR1A is double bufferred, updated when TCNT1 matches TOP
-  OCR1B = map(potVal, 0, 1023, OCR1B_min, OCR1B_max);
-  
-  //analogWrite(10, 17);
-  delay(10);
+  //if (Serial.available() >0)
+  //{
+    //data = Serial.readStringUntil('\n');
+    //new_position = data.toInt();//analogRead(A0);
+    //if (new_position > position +step)
+    //{
+     // position = position - step; 
+    //}
+    //else if (new_position < position -step)
+    //{
+     // position = position + step;
+    //}
+    //else
+    //{
+      //position = new_position;
+      //OCR1B = map(position, 0, max_position, OCR1B_min, OCR1B_max);
+     // delay(10);
+    //} 
+ // }
+ 
 
 }
-//void setup()
-//{
-//  Serial.begin(9600);
-//  Serial.println("poor man's servo sweep");
-//
-//  //turn off L13
-//  pinMode(LED_BUILTIN, OUTPUT);
-//  digitalWrite(LED_BUILTIN, LOW);
-//
-//  pinMode(servoPin, OUTPUT);
-//  digitalWrite(servoPin, LOW);
-//
-//  pinMode(3, OUTPUT);
-//  pinMode(11, OUTPUT);
-//  TCCR2A = _BV(COM2A0) | _BV(COM2B1) | _BV(WGM20);
-//  TCCR2B = _BV(WGM22) | _BV(CS22)| _BV(CS21)| _BV(CS20);           //
-//  OCR2A = 156;
-//  OCR2B = 4;
-//} //setup
-//
-//void loop()
-//{
-//
-//
-//    //unsigned long startTime = millis();
-//
-//    //// Define the duration of the loop in milliseconds
-//    //unsigned long loopDuration = 10000; // 5 seconds
-//
-//    //while (millis() - startTime < loopDuration){
-//        // Move the servo to one side
-//        //Serial.println("one side...");
-//        //digitalWrite(servoPin, HIGH);
-//        //delayMicroseconds(10);    //position
-//        //digitalWrite(servoPin, LOW);
-//        //delayMicroseconds(18100);   //balance of 20000 cycle
-//        //delayMicroseconds(30000-1900);
-//    //}
-//
-//    //startTime = millis();
-//
-//
-//    //while (millis() - startTime < loopDuration){
-//        // Move the servo to the other side
-//      //  Serial.println("other side");
-//        //digitalWrite(servoPin, HIGH);
-//        //delayMicroseconds(1100);    //position
-//        //digitalWrite(servoPin, LOW);
-//        //delayMicroseconds(18900);   //balance of 20000 cycle
-//        //delayMicroseconds(30000-1100);
-//    //}
-//
-//} //loop
-//
