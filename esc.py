@@ -113,8 +113,7 @@ def manual_control_esc():
             exit()
             break
         elif inp == "m":
-            main()
-            break	
+            return	
         elif inp == "n":
             pi.set_servo_pulsewidth(ESC,neutral_value)
         else:
@@ -136,7 +135,7 @@ def calibrate_esc():
             pi.set_servo_pulsewidth(ESC, 0)
             time.sleep(2)
             print("ESC is calibrated")
-            main()
+            return
    
 # Allows incrementing and decrementing esc speed with arrow keys         
 def control_esc(): 
@@ -169,7 +168,7 @@ def control_esc():
             exit()          #going for the stop function
             break
         elif key == "m":
-            main()
+            return
 
             break	
         else:
@@ -218,7 +217,7 @@ def control_esc_and_rudder():
             break
         elif key == "m":
             ser = serial.Serial('/dev/ttyACM0',9600,timeout=1).close()
-            main()
+            return
 
             break	
         else:
@@ -237,7 +236,7 @@ def arm_esc():
         pi.set_servo_pulsewidth(ESC, max_reverse)
         time.sleep(1)
         print("ESC is armed")
-        main()
+        return
         
 def exit(): #Stops all pigpio actions
 
@@ -260,6 +259,7 @@ def set_rudder_mode():
             pi.write(RUDDER_MODE_PIN,0)
             return False
         elif (choice == '2'):
+            os.system ("sudo systemctl stop pypilot.service")
             pi.write(RUDDER_MODE_PIN,1);
             return True
         elif (choice == 'q'):
@@ -274,7 +274,7 @@ def set_rudder_mode():
 # Main Menu
 # --------------------------------------------------------------------------------------------------------------------------
 def main():
-    clear_screen()
+    #clear_screen()
     manual_steering = False
     while True:
         show_menu()
