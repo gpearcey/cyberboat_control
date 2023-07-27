@@ -8,16 +8,23 @@ os.system ("sudo pigpiod") # Start the pigpio daemon
 time.sleep(1) # Delay to let the pigpio library initialize
 import pigpio #importing pigpio library
 import readchar
+import serial
 
 ESC=4  #Connect the ESC to this GPIO pin 
+RUDDER_MODE_PIN = 17
 
 pi = pigpio.pi()
 pi.set_servo_pulsewidth(ESC, 0) 
 
-max_value = 1900          #ESC max value - max forwards thrust
+max_forward = 1900          #ESC max value - max forwards thrust
 neutral_value = 1500      #ESC neutral_value 
-min_value = 1100          #ESC min value - max backwards thrust
+max_reverse = 1100          #ESC min value - max backwards thrust
 speed_step = 10           #Value to increment/decrement the speed by
+angle_step = 1
+max_angle = 180
+min_angle = 0
+straight_rudder = 90
+manual_steering = True
 
 print("Please Calibrate the ESC before arming")
 
@@ -50,12 +57,20 @@ def get_key():
         
 # Limits the speed if the input speedis greater than the max value, or less than the min value 
 def check_speed(speed):
-    if speed > max_value:
-        return max_value
-    elif speed < min_value:
-        return min_value
+    if speed > max_forward:
+        return max_forward
+    elif speed < max_reverse:
+        return max_reverse
     else:
-        return speed        
+        return speed    
+        
+def check_angle(angle):
+    if angle > max_angle:
+        return max_angle
+    elif angle < min_angle:
+        return min_angle
+    else:
+        return angle      
                 
 def clear_screen():
     print("\033c", end="")
@@ -65,15 +80,19 @@ def show_menu():
     print("1. Calibrate ESC")
     print("2. Arm ESC")
     print("3. Manual Control ESC")
-    print("4. Set Rudder Mode")
-    print("5. Manual Control Rudder")    
-    print("6. Control")
+    print("4. Set Steering Mode")  
+    print("5. Control")
     print("q. Quit")
 
 def get_choice():
     while True:
         choice = input("Enter your choice: ")
-        if choice.lower() in ['1', '2', '3', '4', '5', '6', 'q']:
+        if choice.lower() in ['1', '2', '3', '4', '5', 'q']:
+            return choice.lower()
+def get_steering_choice():
+    while True:
+        choice = input("Enter your choice: ")
+        if choice.lower() in ['1', '2','q']:
             return choice.lower()
 
 # -------------------------------------------------------------------------------------------------------------------------
@@ -107,11 +126,11 @@ def calibrate_esc():
     print("Disconnect the battery and press Enter")
     inp = input()
     if inp == '':
-        pi.set_servo_pulsewidth(ESC, max_value)
+        pi.set_servo_pulsewidth(ESC, max_forward)
         print("Connect the battery, wait for the beeps, and press Enter")
         inp = input()
         if inp == '':            
-            pi.set_servo_pulsewidth(ESC, min_value)
+            pi.set_servo_pulsewidth(ESC, max_reverse)
             print("Please wait")
             time.sleep(12)
             pi.set_servo_pulsewidth(ESC, 0)
@@ -120,20 +139,21 @@ def calibrate_esc():
             main()
    
 # Allows incrementing and decrementing esc speed with arrow keys         
-def control(): 
+def control_esc(): 
     print("Starting Motor... ensure that the motos has already been calibrated and armed")
     time.sleep(1)
     speed = neutral_value
+    angle = straight_rudder
     print("Up/Down arrow keys to control speed")
-    print("Left/Right arrow keys to control rudder")
     print("Select 'n' to reset to neutral speed")
     print("Select 'r' to reset to straight rudder position")
     print("Select 'm' to return to the menu")
     print("Select 'q' to quit") 
     while True:
         speed = check_speed(speed)
+        angle = check_angle(angle)
         pi.set_servo_pulsewidth(ESC, speed)
-        time.sleep(0.1)
+        time.sleep(0.01)
         key = get_key()
         
         if key == "DOWN":
@@ -150,10 +170,60 @@ def control():
             break
         elif key == "m":
             main()
+
             break	
         else:
             print("Invalid Input")
            
+# Allows incrementing and decrementing esc speed with arrow keys         
+def control_esc_and_rudder(): 
+    ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
+    ser.reset_input_buffer()
+    print("Starting Motor... ensure that the motos has already been calibrated and armed")
+    time.sleep(1)
+    speed = neutral_value
+    angle = straight_rudder
+    print("Up/Down arrow keys to control speed")
+    print("Left/Right arrow keys to control rudder")
+    print("Select 'n' to reset to neutral speed")
+    print("Select 'r' to reset to straight rudder position")
+    print("Select 'm' to return to the menu")
+    print("Select 'q' to quit") 
+    while True:
+        speed = check_speed(speed)
+        angle = check_angle(angle)
+        pi.set_servo_pulsewidth(ESC, speed)
+        ser.write(b"%d\n" % angle)
+        time.sleep(0.01)
+        key = get_key()
+        
+        if key == "DOWN":
+            speed -= speed_step    
+            print("speed = %d" % speed)
+        elif key == "UP":    
+            speed += speed_step 
+            print("speed = %d" % speed)
+        elif key == "LEFT":     # turn to starboard side - increment
+            angle = angle + angle_step; 
+            print("angle = %d" % angle)
+        elif key == "RIGHT":    # turn to port side - decrement
+            angle = angle - angle_step
+            print("angle = %d" % angle)
+        elif key == "n":
+            speed = neutral_value
+            print("speed = %d" % speed)
+        elif key == "q":
+            ser = serial.Serial('/dev/ttyACM0',9600,timeout=1).close()
+            exit()          #going for the stop function
+            break
+        elif key == "m":
+            ser = serial.Serial('/dev/ttyACM0',9600,timeout=1).close()
+            main()
+
+            break	
+        else:
+            print("Invalid Input")
+
             
 # This is the arming procedure of an ESC       
 def arm_esc(): 
@@ -162,9 +232,9 @@ def arm_esc():
     if inp == '':
         pi.set_servo_pulsewidth(ESC, 0)
         time.sleep(1)
-        pi.set_servo_pulsewidth(ESC, max_value)
+        pi.set_servo_pulsewidth(ESC, max_forward)
         time.sleep(1)
-        pi.set_servo_pulsewidth(ESC, min_value)
+        pi.set_servo_pulsewidth(ESC, max_reverse)
         time.sleep(1)
         print("ESC is armed")
         main()
@@ -175,15 +245,37 @@ def exit(): #Stops all pigpio actions
     pi.stop()
     os.system ("sudo killall pigppiod") # Kill the pigpio daemon
 
-#def set_rudder_mode():
+def set_rudder_mode():
+    clear_screen()
+    invalid = False
+    while True:
+        if (invalid == True):
+            print("Invalid Input")
+        print("==== Steering Mode Menu ====")
+        print("1. Enable Autopilot")
+        print("2. Manual")
+        print("q. Return")
+        choice = get_steering_choice();
+        if (choice == '1'):
+            pi.write(RUDDER_MODE_PIN,0)
+            return False
+        elif (choice == '2'):
+            pi.write(RUDDER_MODE_PIN,1);
+            return True
+        elif (choice == 'q'):
+            return False
+        else:
+            invalid = True
+            
 
-#def control_rudder():
+     
     
 # ----------------------------------------------------------------------------------------------------------------------
 # Main Menu
 # --------------------------------------------------------------------------------------------------------------------------
 def main():
     clear_screen()
+    manual_steering = False
     while True:
         show_menu()
         choice = get_choice()
@@ -194,11 +286,12 @@ def main():
         elif choice == '3':
             manual_control_esc()
         elif choice == '4':
-            set_rudder_mode()
+            manual_steering = set_rudder_mode()
         elif choice == '5':
-            manual_rudder_control()
-        elif choice == '6':
-            control()
+            if (manual_steering == True):
+                control_esc_and_rudder()
+            else:
+                control_esc()
         elif choice == 'q':
             print("Exiting the program.")
             exit()
@@ -208,4 +301,5 @@ def main():
 
 #Start of the program
 if __name__ == "__main__":
+
     main()
