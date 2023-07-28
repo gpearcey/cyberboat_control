@@ -4,6 +4,7 @@
 
 import os     #importing os library so as to communicate with the system
 import time 
+os.system ("sudo killall pigppiod") # Kill any exsiting pigpiod daemon
 os.system ("sudo pigpiod") # Start the pigpio daemon
 time.sleep(1) # Delay to let the pigpio library initialize
 import pigpio #importing pigpio library
@@ -103,16 +104,18 @@ def get_steering_choice():
 
 # Provides manual control over ESC inputs
 def manual_control_esc(): 
-    print("Select a value between %d and %d to set speed" % min_value % max_value)  
+    print("Select a value between %d and %d to set speed" %(max_reverse,max_forward))  
     print("Select 'n' to reset to neutral speed")
     print("Select 'm' to return to the menu")
     print("Select 'q' to quit") 
     while True:
         inp = input()
         if inp == "q":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             exit()
             break
         elif inp == "m":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             return	
         elif inp == "n":
             pi.set_servo_pulsewidth(ESC,neutral_value)
@@ -165,9 +168,11 @@ def control_esc():
             speed = neutral_value
             print("speed = %d" % speed)
         elif key == "q":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             exit()          #going for the stop function
             break
         elif key == "m":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             return
 
             break	
@@ -212,10 +217,12 @@ def control_esc_and_rudder():
             speed = neutral_value
             print("speed = %d" % speed)
         elif key == "q":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             ser = serial.Serial('/dev/ttyACM0',9600,timeout=1).close()
             exit()          #going for the stop function
             break
         elif key == "m":
+            pi.set_servo_pulsewidth(ESC,neutral_value)
             ser = serial.Serial('/dev/ttyACM0',9600,timeout=1).close()
             return
 
@@ -274,24 +281,29 @@ def set_rudder_mode():
 # Main Menu
 # --------------------------------------------------------------------------------------------------------------------------
 def main():
-    #clear_screen()
+    clear_screen()
     manual_steering = False
     while True:
         show_menu()
         choice = get_choice()
         if choice == '1':
             calibrate_esc()
+            clear_screen()
         elif choice == '2':
             arm_esc()
+            clear_screen()
         elif choice == '3':
             manual_control_esc()
+            clear_screen()
         elif choice == '4':
             manual_steering = set_rudder_mode()
+            clear_screen()
         elif choice == '5':
             if (manual_steering == True):
                 control_esc_and_rudder()
             else:
                 control_esc()
+            clear_screen()
         elif choice == 'q':
             print("Exiting the program.")
             exit()
