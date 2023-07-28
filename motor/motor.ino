@@ -1252,6 +1252,7 @@ void setup_manual(){
   OCR1A = 39999; // To get 50 Hz frequency
   OCR1B = OCR1B_min; // start at 1 ms pulse width
 
+  Serial.begin(9600);
 }
 
 void set_straight()
@@ -1275,16 +1276,16 @@ void set_straight()
 
 
 void loop()
-{  delay(20);
+{
 
     // Check if in manual mode
     if (digitalRead(manual_control_pin))
     {
         if (!prev_manual){
             digitalWrite(13,HIGH);
-            setup_manual();            
-            set_straight();
-            delay(10);
+            setup_manual();
+            delay(10);            
+            set_straight();            
             prev_manual = true;
             servo_position = 90;
         }
@@ -1305,7 +1306,7 @@ void loop()
           {
             servo_position = new_position;
             OCR1B = map(servo_position, 0, max_position, OCR1B_min, OCR1B_max);
-            delay(10);
+            delay(2);
           } 
         }
 
