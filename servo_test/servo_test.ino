@@ -215,17 +215,20 @@ uint8_t adcref = _BV(REFS0)| _BV(REFS1); // 1.1v
 volatile uint8_t calculated_clock = 0; // must be volatile to work correctly
 uint8_t timeout;
 uint16_t serial_data_timeout;
-void setup(){}
+void setup(){
+  setup_ap();
+  manual_setup();
+  }
 void setup_ap()
 {
     //Manual Mode Setup
     prev_manual = false;
     //pinMode(10, OUTPUT);
     //digitalWrite(pwm_output_pin_manual, LOW); /* enable internal pullups */
-    pinMode(pwm_output_pin_manual, OUTPUT);
+    //pinMode(pwm_output_pin_manual, OUTPUT);
     // Autopilot Mode Setup
 
-    PCICR = 0;
+     PCICR = 0;
     PCMSK2 = 0;
         
     cli(); // disable interrupts
@@ -241,11 +244,11 @@ void setup_ap()
     sei();
 
     uint32_t start = micros();
-    while(!calculated_clock);  // wait for watchdog to fire
-    uint16_t clock_time = micros() - start;
-    uint8_t div_board = 1; // 1 for 16mhz
-    if(clock_time < 2900) // 1800-2600 is 8mhz, 3800-4600 is 16mhz
-        div_board = 2; // detected 8mhz crystal, otherwise assume 16mhz
+   // while(!calculated_clock);  // wait for watchdog to fire
+     // uint16_t clock_time = micros() - start;
+      uint8_t div_board = 1; // 1 for 16mhz
+    //if(clock_time < 2900) // 1800-2600 is 8mhz, 3800-4600 is 16mhz
+      //div_board = 2; // detected 8mhz crystal, otherwise assume 16mhz
 
     // after timing the clock frequency set the correct divider
     uint8_t div_clock = DIV_CLOCK/div_board;
@@ -1154,6 +1157,7 @@ void manual_setup() {
   // pg 167: f_OCnxPWM = f_CLK_IO / (N*(1+TOP))
   OCR1A = 39999; // To get 50 Hz frequency
   OCR1B = OCR1B_min; // start at 1 ms pulse width
+  OCR1B = map(124, 0, 180, OCR1B_min, OCR1B_max);
 
 }
 
@@ -1179,15 +1183,12 @@ void set_straight()
 
 void loop() {
   // Read analog inputp
-  setup_ap();
-  manual_setup();
-  _delay_ms(10000);
-  set_straight();
+  
+  //manual_setup();
+  _delay_ms(1000);
+  //set_straight();
+  //OCR1B = map(120, 0, 180, OCR1B_min, OCR1B_max);
   // Voltages are between 0-5V on an UNO per https://www.arduino.cc/reference/en/language/functions/analog-io/analogread/
-  if (servo_position == -1)
-  {
-    set_straight();
-  }
 
   //if (Serial.available() >0)
   //{
