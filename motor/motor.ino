@@ -175,12 +175,11 @@ uint8_t low_current = 1;
 uint8_t pwm_style = 2; // detected to 0 or 1 unless detection disabled, default 2
 
 #define port_fault_pin 7 // use pin 7 for optional fault
-#define starboard_fault_pin 8 // use pin 8 for optional fault
+#define starboard_fault_pin 7 // use pin 8 for optional fault
 // if switches pull this pin low, the motor is disengaged
 // and will be noticed by the control program
 
 #define pwm_output_pin 9
-#define pwm_output_pin_manual 5
 
 #define hbridge_a_bottom_pin 2
 #define hbridge_b_bottom_pin 3
@@ -216,7 +215,6 @@ uint8_t voltage_sense = 1;
 uint8_t voltage_mode = 0;  // 0 = 12 volts, 1 = 24 volts
 uint16_t max_voltage = 1600; // 16 volts max in 12 volt mode
 
-
 #define led_pin 13 // led is on when engaged
 
 // Manual mode variables -----------------------------------------
@@ -228,7 +226,7 @@ int step = 2;
 String data;
 int new_position;
 bool prev_manual;
-//-----------------------------------------------------------------------------------------
+
 
 void debug(const char *fmt, ... ){
     char buf[128]; // resulting string limited to 128 chars
@@ -319,17 +317,16 @@ uint8_t adcref = _BV(REFS0)| _BV(REFS1); // 1.1v
 volatile uint8_t calculated_clock = 0; // must be volatile to work correctly
 uint8_t timeout;
 uint16_t serial_data_timeout;
-void setup(){
-    prev_manual = false;
-    setup_ap();
-    //setup_manual();
-    pinMode(pwm_output_pin_manual, OUTPUT);
-    pinMode(13, OUTPUT);
-    
+
+void setup()
+{
+  prev_manual = false;
+  setup_ap();
+  delay(2);
+  setup_ap();
 }
 void setup_ap()
 {
-
     PCICR = 0;
     PCMSK2 = 0;
         
@@ -345,7 +342,12 @@ void setup_ap()
     WDTCSR = (1<<WDIE);
     sei();
 
-    uint8_t div_board = 2; // 1 for 16mhz crystal, 2 for 8mhz crystal
+    //uint32_t start = micros();
+    //while(!calculated_clock);  // wait for watchdog to fire
+    //uint16_t clock_time = micros() - start;
+    uint8_t div_board = 1; // 1 for 16mhz
+    //if(clock_time < 2900) // 1800-2600 is 8mhz, 3800-4600 is 16mhz
+    //    div_board = 2; // detected 8mhz crystal, otherwise assume 16mhz
 
     // after timing the clock frequency set the correct divider
     uint8_t div_clock = DIV_CLOCK/div_board;
@@ -394,8 +396,8 @@ void setup_ap()
     pinMode(shunt_sense_pin, INPUT_PULLUP);
     pinMode(low_current_pin, INPUT_PULLUP);
     pinMode(pwm_style_pin, INPUT_PULLUP);
-    pinMode(manual_control_pin, INPUT_PULLUP);
     pinMode(clutch_pin, INPUT_PULLUP);
+    pinMode(manual_control_pin, INPUT_PULLUP);
     pinMode(voltage_sense_pin, INPUT_PULLUP);
     pinMode(clutch_sense_pwm_pin, INPUT_PULLUP);
 
@@ -427,6 +429,7 @@ void setup_ap()
 
     pinMode(manual_control_pin, INPUT);
     digitalWrite(manual_control_pin, HIGH); /* enable internal pullups */
+
 
     pinMode(shunt_sense_pin, INPUT);
     digitalWrite(shunt_sense_pin, HIGH); /* enable internal pullups */
@@ -1212,7 +1215,6 @@ void service_adc() {
 #endif
 ISR(PCINT2_vect) {
 }
-
 //------------------------------------------------------------------------------
 // Manual Control Functions
 //------------------------------------------------------------------------------------------
@@ -1281,7 +1283,7 @@ void loop()
     // Check if in manual mode
     if (digitalRead(manual_control_pin))
     {
-        if (!prev_manual){
+        if (prev_manual == false){
             digitalWrite(13,HIGH);
             setup_manual();
             delay(10);            
@@ -1298,11 +1300,11 @@ void loop()
           {
             servo_position = servo_position - step; 
           }
-          else if (new_position < servo_position -step)
+         else if (new_position < servo_position -step)
           {
             servo_position = servo_position + step;
           }
-          else
+        else
           {
             servo_position = new_position;
             OCR1B = map(servo_position, 0, max_position, OCR1B_min, OCR1B_max);
@@ -1311,13 +1313,12 @@ void loop()
         }
 
     }
-    else{ // Autopilot mode
-    if (prev_manual = true)
+    else {
+    if (prev_manual == true)
     {
       setup_ap();
       prev_manual = false;
-    }
-    
+    }  
     
     TIMSK0 = 0; // disable timer0 interrupt: millis is not used!
     wdt_reset(); // strobe watchdog
@@ -1460,7 +1461,7 @@ void loop()
             TakeVolts(0); // clear readings
             TakeVolts(1);
         } else
-        // voltage must be between 9 and max voltage 
+        /* voltage must be between 9 and max voltage */
         if(volts <= 900 || volts >= max_voltage) {
             disengage();
             flags |= BADVOLTAGE_FAULT;
@@ -1581,7 +1582,7 @@ void loop()
             }
             return;
 
-        case 16: case 26: case 36: // eeprom reads 
+        case 16: case 26: case 36: /* eeprom reads */
             if(eeprom_read_addr != eeprom_read_end) {
                 uint8_t value;
                 if(eeprom_read_8(eeprom_read_addr, value)) {
