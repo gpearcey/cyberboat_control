@@ -217,7 +217,7 @@ uint16_t max_voltage = 1600; // 16 volts max in 12 volt mode
 
 #define led_pin 13 // led is on when engaged
 
-// Manual mode variables -----------------------------------------
+// Manual mode variables -----------------------------------------------------------------
 int OCR1B_min = 1999; //+1=2000 clock cycles to get 1 ms pulse width (off)
 int OCR1B_max = 3999; // to get 2 ms pulse width (max speed)
 int max_position = 180;
@@ -226,7 +226,7 @@ int step = 2;
 String data;
 int new_position;
 bool prev_manual;
-
+//----------------------------------------------------------------------------------------
 
 void debug(const char *fmt, ... ){
     char buf[128]; // resulting string limited to 128 chars
@@ -321,8 +321,6 @@ uint16_t serial_data_timeout;
 void setup()
 {
   prev_manual = false;
-  setup_ap();
-  delay(2);
   setup_ap();
 }
 void setup_ap()
@@ -1215,7 +1213,7 @@ void service_adc() {
 #endif
 ISR(PCINT2_vect) {
 }
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 // Manual Control Functions
 //------------------------------------------------------------------------------------------
 void setup_manual(){
@@ -1223,7 +1221,7 @@ void setup_manual(){
   CLKPR = 0; // divide by 1
   sei();
 
-  pinMode(10, OUTPUT);
+  pinMode(10, OUTPUT); //pwm output pin
     
   // Create variables to store the values to be written to the TIM1 registers
   // Control registers are 8 bits (char)
@@ -1313,7 +1311,7 @@ void loop()
         }
 
     }
-    else {
+    else {//autopilot mode
     if (prev_manual == true)
     {
       setup_ap();
