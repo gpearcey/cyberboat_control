@@ -345,7 +345,7 @@ void setup_ap()
     WDTCSR = (1<<WDIE);
     sei();
 
-    uint8_t div_board = 1; // 1 for 16mhz crystal, 2 for 8mhz crystal
+    uint8_t div_board = 2; // 1 for 16mhz crystal, 2 for 8mhz crystal
 
     // after timing the clock frequency set the correct divider
     uint8_t div_clock = DIV_CLOCK/div_board;
