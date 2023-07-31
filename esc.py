@@ -184,7 +184,8 @@ def control_esc_and_rudder():
     ser = serial.Serial('/dev/ttyACM0',9600,timeout=1)
     ser.reset_input_buffer()
     print("Starting Motor... ensure that the motos has already been calibrated and armed")
-    time.sleep(1)
+    print("Please wait... calibrating servo")
+    time.sleep(11)
     speed = neutral_value
     angle = straight_rudder
     print("Up/Down arrow keys to control speed")
