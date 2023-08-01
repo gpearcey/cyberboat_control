@@ -1,2 +1,2 @@
-# cyberboat_manual_control
+# cyberboat_control
 Programs to manually control the cyberboat
