@@ -12,7 +12,7 @@ import readchar
 import serial
 
 ESC=4  #Connect the ESC to this GPIO pin 
-RUDDER_MODE_PIN = 17
+RUDDER_MODE_PIN = 17 # Connect pin 8 on the arduino to this pin
 
 pi = pigpio.pi()
 pi.set_servo_pulsewidth(ESC, 0) 
@@ -77,7 +77,7 @@ def clear_screen():
     print("\033c", end="")
 
 def show_menu():
-    print("==== CyberBoat Propulsion and Steerting Menu ====")
+    print("==== CyberBoat Propulsion and Steering Menu ====")
     print("1. Calibrate ESC")
     print("2. Arm ESC")
     print("3. Manual Control ESC")
@@ -262,13 +262,13 @@ def set_rudder_mode():
         print("1. Enable Autopilot")
         print("2. Manual")
         print("q. Return")
-        choice = get_steering_choice();
+        choice = get_steering_choice()
         if (choice == '1'):
             pi.write(RUDDER_MODE_PIN,0)
             return False
         elif (choice == '2'):
             os.system ("sudo systemctl stop pypilot.service")
-            pi.write(RUDDER_MODE_PIN,1);
+            pi.write(RUDDER_MODE_PIN,1)
             return True
         elif (choice == 'q'):
             return False
