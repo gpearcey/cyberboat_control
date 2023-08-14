@@ -19,7 +19,7 @@ def clear_screen():
 def show_menu(mode):
     print("==== CyberBoat Attack Modes ====")
     print("")
-    print(" Current Mode: %s",mode)
+    print(" Current Mode: ",mode)
     print("")
     print("Select Mode:")
     print("1. Off")
