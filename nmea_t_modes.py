@@ -43,7 +43,7 @@ def main():
     manual_steering = False
     mode = "Off"
     while True:
-    	clear_screen()
+        clear_screen()
         show_menu(mode)
         choice = get_choice()
         if choice == '1':
