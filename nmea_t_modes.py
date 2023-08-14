@@ -41,7 +41,9 @@ def get_choice():
 def main():
     clear_screen()
     manual_steering = False
-    mode = "Off"
+    mode = "Passive"
+    pi.write(LSB,1)
+    pi.write(MSB,0)
     while True:
         clear_screen()
         show_menu(mode)
@@ -53,13 +55,13 @@ def main():
             clear_screen()
         elif choice == '2':
             mode = "Passive"
-            pi.write(LSB,0)
-            pi.write(MSB,1)
+            pi.write(LSB,1)
+            pi.write(MSB,0)
             clear_screen()
         elif choice == '3':
             mode = "GPS Attack"
-            pi.write(LSB,1)
-            pi.write(MSB,0)
+            pi.write(LSB,0)
+            pi.write(MSB,1)
             clear_screen()
         elif choice == '4':
             mode = "Extra"
