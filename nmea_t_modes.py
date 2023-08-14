@@ -1,8 +1,5 @@
 import os     #importing os library so as to communicate with the system
-import time 
 import pigpio #importing pigpio library
-import readchar
-import serial
 
 LSB = 23  #Connect to ESP32 pin 18
 MSB = 24 # Connect to ESP32 pin 19
@@ -45,7 +42,6 @@ def main():
     pi.write(LSB,1)
     pi.write(MSB,0)
     while True:
-        clear_screen()
         show_menu(mode)
         choice = get_choice()
         if choice == '1':
