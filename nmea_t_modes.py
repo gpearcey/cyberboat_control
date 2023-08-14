@@ -1,4 +1,3 @@
-import os     #importing os library so as to communicate with the system
 import pigpio #importing pigpio library
 
 LSB = 23  #Connect to ESP32 pin 18
