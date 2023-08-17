@@ -24,8 +24,8 @@ def show_menu(mode):
     print("Select Mode:")
     print("1. Off")
     print("2. Passive")
-    print("3. GPS Attack")
-    #print("4. Extra")  
+    print("3. GPS Opposite Direction Attack")
+    print("4. GPS Translation Attack")  
     print("q. Quit")
 
 def get_choice():
@@ -59,12 +59,12 @@ def main():
             pi.write(MSB,0)
             clear_screen()
         elif choice == '3':
-            mode = "GPS Attack"
+            mode = "GPS Opposite Direction Attack"
             pi.write(LSB,0)
             pi.write(MSB,1)
             clear_screen()
         elif choice == '4':
-            mode = "Extra"
+            mode = "GPS Translation Attack"
             pi.write(LSB,1)
             pi.write(MSB,1)
             clear_screen()
